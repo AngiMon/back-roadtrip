@@ -1,0 +1,1 @@
+dev: "npx sequelize db\:migrate";
