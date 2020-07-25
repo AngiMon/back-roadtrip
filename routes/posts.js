@@ -3,6 +3,7 @@ var router = express.Router();
 var bodyParser = require('body-parser');
 var app = require('../app');
 var Post = require('../models/Post');
+const { response } = require('express');
 
 //CREATE
 app.post('/post/add', async function(req, res, next) {
@@ -37,20 +38,30 @@ app.get('/post/:id', function(req, res, next) {
         console.log(e);
         res.json(500);
       });  
-  });
+    });
 
 //UPDATE
-  app.put('/post/:id', function(req, res, next) {
-    console.log(req.body);
+app.put('/post/:id', function(req, res, next) {
     const id = req.params.id;
-    const username = req.body.username;
-  
-    res.json('OK!!');
+    const content = req.body.content;
+    Post.findByPk(id).then(post =>{
+        post.update({
+            content: content
+        }, {}).then(response =>{
+            res.json(200);
+        }).catch(function (e) {
+            console.log(e);
+            res.json(500);
+          })
+    }).catch(function (e) {
+        console.log(e);
+        res.json(500);
+      });  
+    
   });
 
 //DELETE
 app.delete('/post/:id', function(req, res, next) {
-    console.log(req.body);
     const id = req.params.id;
   
     res.json('OK!!');

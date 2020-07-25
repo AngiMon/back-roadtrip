@@ -28,10 +28,10 @@ app.post('/user/add', async function(req, res, next) {
 //READ
 app.post('/user/all', function(req, res, next) {
   User.findAll().then(users => {
-    console.log(users);
     res.json(users);
   }).catch(function (e) {
     console.log(e);
+    res.json(500);
   });
 })
 app.get('/user/:id', function(req, res, next) {
@@ -46,7 +46,6 @@ app.get('/user/:id', function(req, res, next) {
 
 //UPDATE
 app.put('/user/:id', function(req, res, next) {
-  console.log(req.body);
   const id = req.params.id;
   const username = req.body.username;
   const firstname = req.body.firstname;
@@ -57,7 +56,6 @@ app.put('/user/:id', function(req, res, next) {
 
 //DELETE
 app.delete('/user/:id', function(req, res, next) {
-  console.log(req.body);
   const id = req.params.id;
 
   res.json('OK!!');
