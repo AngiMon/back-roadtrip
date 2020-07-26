@@ -10,10 +10,6 @@ Post.init({
               autoIncrement: true, 
               primaryKey: true
               },
-          author: {
-              type: Sequelize.STRING(255), 
-              allowNull: false 
-          },
           content: {
               type: Sequelize.STRING(255), 
               allowNull: false,

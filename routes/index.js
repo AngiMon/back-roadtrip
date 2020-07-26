@@ -1,7 +1,4 @@
 var app = require('../app');
-
-
-
 var usersRouter = require('./users');
 var postsRouter = require('./posts');
 
