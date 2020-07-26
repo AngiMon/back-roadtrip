@@ -37,12 +37,12 @@ app.post('/auth/token-delivery', function(req, res, next) {
                 console.log(process.env.secret);
 
                 const token = jwt.sign(
-                    {
-                        userId: user.id,
-                        userEmail: user.email
-                    },
-                    process.env.secret,
-                    { expiresIn: '24h' });
+                {
+                    userId: user.id,
+                    userEmail: user.email
+                },
+                process.env.secret,
+                { expiresIn: '1h' });
 
                 res.status(200).json({
                     token: token

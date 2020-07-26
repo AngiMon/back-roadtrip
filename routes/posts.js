@@ -161,21 +161,31 @@ app.put('/post/:id', function(req, res, next) {
  */
 app.delete('/post/:id', function(req, res, next) {
     const id = req.params.id;
-    Post.findByPk(id).then(post =>{
-        if(post === null){
-            res.json(404);
-        }else{
-        post.destroy().then(response =>{
-            res.json(200);
-        }).catch(function (e) {
-            console.log(e);
-            res.json(500);
-            })
-        }
-    }).catch(function (e) {
-        console.log(e);
-        res.json(500);
-    });  
+     //headers
+     const token = req.headers.authorization;
+     const decodedToken = jwt.verify(token, process.env.secret);
+     const userId = decodedToken.author;
+ 
+     try {
+        Post.findByPk(id).then(post =>{
+            if(post === null){
+                res.json(404);
+            }else{
+            post.destroy().then(response =>{
+                res.json(200);
+            }).catch(function (e) {
+                console.log(e);
+                res.json(500);
+                })
+            }
+         }).catch(function (e) {
+             console.log(e);
+             res.json(500);
+         });  
+     } catch {
+             res.status(401).json({
+             error: new Error('Invalid request!')
+     })};   
 });
 
 module.exports = router;
