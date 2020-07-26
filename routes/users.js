@@ -26,9 +26,9 @@ app.post('/user/add', async function(req, res, next) {
   const firstname = req.body.firstname;
   const lastname = req.body.lastname;
   const email = req.body.email;
-  const password = req.body.password;
+  var password = req.body.password;
   var role = req.body.role;
-  
+
   if(typeof role == "string"){
     role = role.replace(/\s/g,'');
     role = role.split(',');

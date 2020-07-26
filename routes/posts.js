@@ -5,6 +5,7 @@ var app = require('../app');
 var Post = require('../models/Post');
 var cors = require('cors');
 const User = require('../models/User');
+const jwt = require('jsonwebtoken');
 app.use(cors());
 
 
@@ -13,6 +14,7 @@ app.use(cors());
  * @api {post} /post/add Request Post add
  * @apiName NewPost
  * @apiGroup Post
+ * @apiHeader Authorization Basic Access Authentication token.
  *
  * @apiParam {Number} author
  * @apiParam {String} location
@@ -25,20 +27,38 @@ app.post('/post/add', function(req, res, next) {
     const author = req.body.author;
     const content = req.body.content;
     const location = req.body.location;
-    Post.create(
-    { 
-        author: author, 
-        content: content,
-        location: location 
-    }).then(response => {
-        res.json(200);
-    }).catch(function (e) {
-        console.log(e);
-        res.json(500);
-    });
+    //headers
+    const token = req.headers.authorization;
+    const decodedToken = jwt.verify(token, process.env.secret);
+    const userId = decodedToken.author;
+
+    try {
+        Post.create(
+        { 
+            author: author, 
+            content: content,
+            location: location 
+        }).then(response => {
+            res.json(200);
+        }).catch(function (e) {
+            console.log(e);
+            res.json(500);
+        });
+    } catch {
+        res.status(401).json({
+        error: new Error('Invalid request!')
+    })}; 
 });
 
 //READ
+/**
+ * @api {get} /post/all Request Post get all
+ * @apiName GetAllPost
+ * @apiGroup Post
+ *
+ * @apiSampleRequest http://localhost:8080/post/all
+ * @apiSuccess {Object}  post
+ */
 app.get('/post/all', function(req, res, next) {
     Post.findAll().then(posts => {
         res.json(posts);
@@ -89,23 +109,43 @@ app.get('/post/:id', function(req, res, next) {
 });
 
 //UPDATE
+/**
+ * @api {put} /post/:id Request Post update
+ * @apiName UpdatePost
+ * @apiGroup Post
+ * @apiHeader Authorization Basic Access Authentication token.
+ *
+ * @apiParam {Number} id Post unique ID.
+ * @apiParam {String} content Post content.
+ * 
+ * @apiSampleRequest http://localhost:8080/post/:id
+ */
 app.put('/post/:id', function(req, res, next) {
     const id = req.params.id;
     const content = req.body.content;
-    Post.findByPk(id).then(post =>{
-        post.update({
-            content: content
-        }, {}).then(response =>{
-            res.json(200);
+    //headers
+    const token = req.headers.authorization;
+    const decodedToken = jwt.verify(token, process.env.secret);
+    const userId = decodedToken.author;
+
+    try {
+        Post.findByPk(id).then(post =>{
+            post.update({
+                content: content
+            }, {}).then(response =>{
+                res.json(200);
+            }).catch(function (e) {
+                console.log(e);
+                res.json(500);
+                })
         }).catch(function (e) {
             console.log(e);
             res.json(500);
-          })
-    }).catch(function (e) {
-        console.log(e);
-        res.json(500);
-    });  
-    
+        });  
+    } catch {
+            res.status(401).json({
+            error: new Error('Invalid request!')
+    })};   
 });
 
 //DELETE

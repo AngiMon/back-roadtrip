@@ -1,6 +1,7 @@
 const { Sequelize, DataTypes, Model } = require('sequelize');
 var sequelize = require('./Model');
 const Post = require('./Post');
+const bcrypt = require('bcrypt');
 
 class User extends Model {}
 
@@ -37,11 +38,19 @@ User.init({
             type: Sequelize.STRING(255),
             allowNull: false
         }
-    },{
+    },
+    {
   // Other model options go here
   sequelize, // We need to pass the connection instance
   modelName: 'User', // We need to choose the model name
-  tableName: 'users'
+  tableName: 'users',
+  hooks : {
+        beforeCreate : (user , options) => {
+            {
+                user.password = user.password && user.password != "" ? bcrypt.hashSync(user.password, 10) : "";
+            }
+        }
+    }
 });
 
 User.hasMany(Post, {
@@ -52,6 +61,6 @@ Post.belongsTo(User, {
   });
 
 // the defined model is the class itself
-console.log(User === sequelize.models.User); // true
+console.log("User : " + (User === sequelize.models.User)); // true
 
 module.exports = User;

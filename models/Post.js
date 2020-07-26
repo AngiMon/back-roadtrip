@@ -26,6 +26,6 @@ Post.init({
   });
   
   // the defined model is the class itself
-  console.log(Post === sequelize.models.Post); // true
+  console.log("Post : "+ (Post === sequelize.models.Post)); // true
   
   module.exports = Post;
