@@ -62,5 +62,6 @@ Post.belongsTo(User, {
 
 // the defined model is the class itself
 console.log("User : " + (User === sequelize.models.User)); // true
+sequelize.models.User;
 
 module.exports = User;

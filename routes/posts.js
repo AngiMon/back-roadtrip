@@ -18,6 +18,7 @@ app.use(cors());
  *
  * @apiParam {Number} author
  * @apiParam {String} location
+ * @apiParam {String} title
  * @apiParam {String} content
  *
  * @apiSuccess {String} string
@@ -25,6 +26,7 @@ app.use(cors());
  */
 app.post('/post/add', function(req, res, next) {
     const author = req.body.author;
+    const title = req.body.title;
     const content = req.body.content;
     const location = req.body.location;
     //headers
@@ -35,6 +37,7 @@ app.post('/post/add', function(req, res, next) {
     try {
         Post.create(
         { 
+            title: title,
             author: author, 
             content: content,
             location: location 
@@ -60,7 +63,10 @@ app.post('/post/add', function(req, res, next) {
  * @apiSuccess {Object}  post
  */
 app.get('/post/all', function(req, res, next) {
-    Post.findAll().then(posts => {
+    Post.findAll({order: [["id", "DESC"]],
+        include: [
+          { model: User }
+        ]}).then(posts => {
         res.json(posts);
       }).catch(function (e) {
         console.log(e);

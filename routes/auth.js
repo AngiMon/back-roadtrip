@@ -64,3 +64,62 @@ app.post('/auth/token-delivery', function(req, res, next) {
         }
     );
 })
+/**
+ * @api {post} /auth/token-delivery Token delivery
+ * @apiName TokenDelivery
+ * @apiGroup Auth
+ *
+ * @apiParam {String} email
+ * @apiParam {String} password
+ *
+ * @apiSampleRequest http://localhost:8080/auth/token-delivery
+ */
+app.post('/auth/account/token-delivery', function(req, res, next) {
+    const token = req.headers.authorization;
+    const decodedToken = jwt.verify(token, process.env.secret);
+
+    User.findOne({ where:{email: req.body.email} }).then(
+        (user) => {
+            if (!user) {
+                return res.status(401).json({
+                    error: new Error('User not found!')
+                });
+            }
+            bcrypt.compare(req.body.password, user.password).then(
+                (valid) => {
+                if (!valid) {
+                    return res.status(401).json({
+                    error: new Error('Incorrect password!')
+                    });
+                }
+                console.log(process.env.secret);
+
+                const token = jwt.sign(
+                {
+                    userId: user.id,
+                    userEmail: user.email,
+                    role: "dashboard"
+                },
+                process.env.secret,
+                { expiresIn: '1h' });
+
+                res.status(200).json({
+                    token: token
+                });
+            }).catch(
+                (error) => {
+                    res.status(500).json({
+                        error: error
+                    });
+                }
+            );
+        }).catch(
+        (error) => {
+            console.log(error);
+
+          res.status(500).json({
+            error: error
+          });
+        }
+    );
+})

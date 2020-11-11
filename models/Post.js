@@ -1,6 +1,6 @@
 const { Sequelize, DataTypes, Model } = require('sequelize');
 var sequelize = require('./Model');
-
+const User = require('./User');
 class Post extends Model {};
 
 Post.init({
@@ -9,7 +9,14 @@ Post.init({
               type: Sequelize.INTEGER, 
               autoIncrement: true, 
               primaryKey: true
-              },
+              },content: {
+              type: Sequelize.STRING(255), 
+              allowNull: false,
+          },
+          title: {
+            type: Sequelize.STRING(255), 
+            allowNull: false,
+        },
           content: {
               type: Sequelize.STRING(255), 
               allowNull: false,
@@ -27,5 +34,5 @@ Post.init({
   
   // the defined model is the class itself
   console.log("Post : "+ (Post === sequelize.models.Post)); // true
-  
+  sequelize.models.Post;
   module.exports = Post;

@@ -14,6 +14,7 @@ app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
+
 app.listen(process.env.port, () =>  { // ecoute du serveur sur le port 8080
     console.log(`app listening in port ${process.env.port}!`)
   })

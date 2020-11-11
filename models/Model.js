@@ -12,4 +12,4 @@ const sequelize = new Sequelize(
 
 module.exports = sequelize;
 
-//sequelize.sync({logging: console.log});
+sequelize.sync({logging: console.log});
