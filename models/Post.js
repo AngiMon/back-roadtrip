@@ -24,6 +24,10 @@ Post.init({
           location: {
               type: Sequelize.STRING(255), 
               allowNull: true
+          },
+          published: {
+              type: Sequelize.BOOLEAN,
+              allowNull:true
           }
       },{
     // Other model options go here

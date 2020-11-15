@@ -17,28 +17,29 @@ app.use(cors());
  * @apiGroup Post
  * @apiHeader Authorization Basic Access Authentication token.
  *
- * @apiParam {Number} author
  * @apiParam {String} location
  * @apiParam {String} title
  * @apiParam {String} content
+ * @apiParam {Boolean} published
  *
  * @apiSuccess {String} string
  * @apiSampleRequest http://localhost:8080/post/add
  */
 app.post('/post/add', function(req, res, next) {
-    const author = req.body.author;
     const title = req.body.title;
     const content = req.body.content;
     const location = req.body.location;
+    const published = req.body.published;
+
     //headers
     const token = req.headers.authorization;
     var tokenInfo = TokenService.tokenVerify(token);
 
     if(tokenInfo.status != 200){
-        res.status(200).json({status: tokenInfo.status, error: "invalid_token", message:tokenInfo.message});
+        res.status(200).json(tokenInfo);
     }else{
         const decodedToken = jwt.verify(token, process.env.secret);
-        const userId = decodedToken.author;
+        const author = decodedToken.userId;
 
         try {
             Post.create(
@@ -46,7 +47,8 @@ app.post('/post/add', function(req, res, next) {
                 title: title,
                 author: author, 
                 content: content,
-                location: location 
+                location: location,
+                published: published
             }).then(response => {
                 res.json(200);
             }).catch(function (e) {
@@ -70,15 +72,23 @@ app.post('/post/add', function(req, res, next) {
  * @apiSuccess {Object}  post
  */
 app.get('/post/all', function(req, res, next) {
-    Post.findAll({order: [["id", "DESC"]],
-        include: [
-          { model: User }
-        ]}).then(posts => {
-        res.json(posts);
-      }).catch(function (e) {
-        console.log(e);
-        res.json(500);
-      });
+    //headers
+    const token = req.headers.authorization;
+    var tokenInfo = TokenService.tokenVerify(token);
+
+    if(tokenInfo.status != 200){
+        res.status(200).json(tokenInfo);
+    }else{
+        Post.findAll({order: [["id", "DESC"]],
+            include: [
+            { model: User }
+            ]}).then(posts => {
+            res.json(posts);
+        }).catch(function (e) {
+            console.log(e);
+            res.json(500);
+        });
+    }
 });
 
 /**
