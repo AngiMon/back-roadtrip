@@ -6,12 +6,14 @@ var cors = require('cors');
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
 const bcrypt = require('bcrypt');
+const TokenService = require("../services/TokenService")
+
 app.use(cors());
 
 
 /**
- * @api {post} /auth/token-delivery Token delivery
- * @apiName TokenDelivery
+ * @api {post} /auth/token-delivery Anonymous token delivery
+ * @apiName TokenDeliveryForAnonymous
  * @apiGroup Auth
  *
  * @apiParam {String} email
@@ -34,7 +36,6 @@ app.post('/auth/token-delivery', function(req, res, next) {
                     error: new Error('Incorrect password!')
                     });
                 }
-                console.log(process.env.secret);
 
                 const token = jwt.sign(
                 {
@@ -65,14 +66,14 @@ app.post('/auth/token-delivery', function(req, res, next) {
     );
 })
 /**
- * @api {post} /auth/token-delivery Token delivery
- * @apiName TokenDelivery
+ * @api {post} /auth/account/token-delivery Dashboard token delivery
+ * @apiName TokenDeliveryForDashboard
  * @apiGroup Auth
  *
  * @apiParam {String} email
  * @apiParam {String} password
  *
- * @apiSampleRequest http://localhost:8080/auth/token-delivery
+ * @apiSampleRequest http://localhost:8080/auth/account/token-delivery
  */
 app.post('/auth/account/token-delivery', function(req, res, next) {
     const token = req.headers.authorization;
@@ -92,7 +93,6 @@ app.post('/auth/account/token-delivery', function(req, res, next) {
                     error: new Error('Incorrect password!')
                     });
                 }
-                console.log(process.env.secret);
 
                 const token = jwt.sign(
                 {
@@ -123,3 +123,18 @@ app.post('/auth/account/token-delivery', function(req, res, next) {
         }
     );
 })
+/**
+ * @api {post} /auth/token-verify Token verify
+ * @apiName TokenVerify
+ * @apiGroup Auth
+ *
+ * @apiParam {String} token
+ *
+ * @apiSampleRequest http://localhost:8080/token-verify
+ */
+app.post('/token-verify', function(req, res, next){
+    const token = req.body.token;
+    const tokenInfo = TokenService.tokenVerify(token);
+    res.status(200).json(tokenInfo);
+})
+

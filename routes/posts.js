@@ -6,6 +6,7 @@ var Post = require('../models/Post');
 var cors = require('cors');
 const User = require('../models/User');
 const jwt = require('jsonwebtoken');
+const TokenService = require("../services/TokenService")
 app.use(cors());
 
 
@@ -31,26 +32,32 @@ app.post('/post/add', function(req, res, next) {
     const location = req.body.location;
     //headers
     const token = req.headers.authorization;
-    const decodedToken = jwt.verify(token, process.env.secret);
-    const userId = decodedToken.author;
+    var tokenInfo = TokenService.tokenVerify(token);
 
-    try {
-        Post.create(
-        { 
-            title: title,
-            author: author, 
-            content: content,
-            location: location 
-        }).then(response => {
-            res.json(200);
-        }).catch(function (e) {
-            console.log(e);
-            res.json(500);
-        });
-    } catch {
-        res.status(401).json({
-        error: new Error('Invalid request!')
-    })}; 
+    if(tokenInfo.status != 200){
+        res.status(200).json({status: tokenInfo.status, error: "invalid_token", message:tokenInfo.message});
+    }else{
+        const decodedToken = jwt.verify(token, process.env.secret);
+        const userId = decodedToken.author;
+
+        try {
+            Post.create(
+            { 
+                title: title,
+                author: author, 
+                content: content,
+                location: location 
+            }).then(response => {
+                res.json(200);
+            }).catch(function (e) {
+                console.log(e);
+                res.json(500);
+            });
+        } catch {
+            res.status(401).json({
+            error: new Error('Invalid request!')
+        })}; 
+    }
 });
 
 //READ
