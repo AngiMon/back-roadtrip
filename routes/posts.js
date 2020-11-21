@@ -9,7 +9,6 @@ const jwt = require('jsonwebtoken');
 const TokenService = require("../services/TokenService")
 app.use(cors());
 
-
 //CREATE
 /**
  * @api {post} /post/add Request Post add
