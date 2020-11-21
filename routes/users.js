@@ -22,59 +22,68 @@ app.use(cors());
  * @apiSampleRequest http://localhost:8080/user/add
  */
 app.post('/user/add', async function(req, res, next) {
-  const username = req.body.username;
-  const firstname = req.body.firstname;
-  const lastname = req.body.lastname;
-  const email = req.body.email;
-  var password = req.body.password;
-  var role = req.body.role;
+  const  { username, firstname, lastname, email, password, role } = req.body;
 
   if(typeof role == "string"){
     role = role.replace(/\s/g,'');
     role = role.split(',');
   }
 
-  User.create({ 
-    username: username,
-    password: password,
-    email: email,
-    role: role,
-    lastname: lastname,
-    firstname: firstname
-  }).then(response =>{
+  try{
+    const response = await User.create({ 
+      username: username,
+      password: password,
+      email: email,
+      role: role,
+      lastname: lastname,
+      firstname: firstname
+    })
+  
+    if(!response) throw new Error('Failed to create user in database')
+  
     res.json(200);
-  }).catch(function (e) {
-    console.log(e);
-    res.json(500);
-  });
+  } catch (err){
+    console.log(err);
+    res.json(401, 'Invalid request');
+  }
+ 
 });
 
 //READ
-app.post('/user/all', function(req, res, next) {
-  User.findAll().then(users => {
+app.post('/user/all', async function(req, res, next) {
+  try{
+    const users = await User.findAll();
+
+    if(!users) throw new Error('Failed to retrive users in the database');
+  
     res.json(users);
-  }).catch(function (e) {
-    console.log(e);
-    res.json(500);
-  });
+  } catch(err){
+    console.log(err);
+    res.json(401, 'invalid request');
+  }
+  
 }) 
-app.get('/user/:id', function(req, res, next) {
+app.get('/user/:id', async function(req, res, next) {
   const id = req.params.id;
-  User.findByPk(id).then(user =>{
-      res.json(user);
-  }).catch(function (e) {
-      console.log(e);
-      res.json(500);
-    });  
+
+  try{
+    const user = await User.findByPk(id);
+
+    if(!user) throw new Error('Failed to find user in the database');
+
+    res.json(user);
+  } catch (err){
+    console.log(err);
+    res.json(401, 'Invalid request');
+  }
 });
 
 //UPDATE
 app.put('/user/:id', function(req, res, next) {
+  const { username, firstname, lastname } = req.body;
   const id = req.params.id;
-  const username = req.body.username;
-  const firstname = req.body.firstname;
-  const lastname = req.body.lastname;
 
+  //TODO update
   res.json('OK!!');
 });
 
@@ -82,6 +91,7 @@ app.put('/user/:id', function(req, res, next) {
 app.delete('/user/:id', function(req, res, next) {
   const id = req.params.id;
 
+  //TODO delete
   res.json('OK!!');
 });
 

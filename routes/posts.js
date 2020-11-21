@@ -25,41 +25,36 @@ app.use(cors());
  * @apiSuccess {String} string
  * @apiSampleRequest http://localhost:8080/post/add
  */
-app.post('/post/add', function(req, res, next) {
-    const title = req.body.title;
-    const content = req.body.content;
-    const location = req.body.location;
-    const published = req.body.published;
+app.post('/post/add', async function(req, res, next) {
+    const { title, content, location, published } = req.body;
 
-    //headers
-    const token = req.headers.authorization;
-    var tokenInfo = TokenService.tokenVerify(token);
+    try {
+        //headers
+        const token = req.headers.authorization;
+        const tokenInfo = TokenService.tokenVerify(token);
 
-    if(tokenInfo.status != 200){
-        res.status(200).json(tokenInfo);
-    }else{
-        const decodedToken = jwt.verify(token, process.env.secret);
-        const author = decodedToken.userId;
-
-        try {
-            Post.create(
-            { 
+        if (tokenInfo.status != 200){
+            res.status(200).json(tokenInfo);
+        } else{
+            const decodedToken = jwt.verify(token, process.env.secret);
+            const author = decodedToken.userId;
+            
+            const response = await Post.create({ 
                 title: title,
                 author: author, 
                 content: content,
                 location: location,
                 published: published
-            }).then(response => {
-                res.json(200);
-            }).catch(function (e) {
-                console.log(e);
-                res.json(500);
-            });
-        } catch {
-            res.status(401).json({
-            error: new Error('Invalid request!')
-        })}; 
-    }
+            })
+            
+            if (!response) throw new Error('Failed to create post in database')
+                
+            res.json(200)
+        } 
+    } catch (err) {
+        console.error(err)
+        res.status(401).json({error: new Error('Invalid request!')})
+    }; 
 });
 
 //READ
@@ -71,7 +66,7 @@ app.post('/post/add', function(req, res, next) {
  * @apiSampleRequest http://localhost:8080/post/all
  * @apiSuccess {Object}  post
  */
-app.get('/post/all', function(req, res, next) {
+app.get('/post/all', async function(req, res, next) {
     //headers
     const token = req.headers.authorization;
     var tokenInfo = TokenService.tokenVerify(token);
@@ -79,15 +74,16 @@ app.get('/post/all', function(req, res, next) {
     if(tokenInfo.status != 200){
         res.status(200).json(tokenInfo);
     }else{
-        Post.findAll({order: [["id", "DESC"]],
-            include: [
-            { model: User }
-            ]}).then(posts => {
+        try{
+            const posts = await Post.findAll({order:[["id", "DESC"]], include:[{ model: User }]});
+
+            if(!posts) throw new Error('Failed to retrive posts from the database');
+
             res.json(posts);
-        }).catch(function (e) {
-            console.log(e);
-            res.json(500);
-        });
+        } catch(err){
+            console.error(err)
+            res.status(401).json({error: new Error('Invalid request!')})
+        }
     }
 });
 
@@ -112,23 +108,23 @@ app.get('/post/all', function(req, res, next) {
  * @apiSampleRequest http://localhost:8080/post/:id
  * @apiSuccess {Object}  post
  */
-app.get('/post/:id', function(req, res, next) {
+app.get('/post/:id', async function(req, res, next) {
     const id = req.params.id;
-    Post.findByPk(id).then(post =>{
-        if(post !== null){
-            User.findByPk(post.author).then(user =>{
-                res.json({post:post, author:user});
-            }).catch(function (e) {
-                console.log(e);
-                res.json(500);
-            });  
-        }else{
-            res.json(post);
-        }
-    }).catch(function (e) {
-        console.log(e);
-        res.json(500);
-    });  
+
+    try{
+        const post = await Post.findByPk(id)
+        
+        if(!post) throw new Error('Failed to find post in database');
+        
+        const user = await User.findByPk(post.author);
+        
+        if(!user) throw new Error('Failed to find post author in database');
+        
+        res.json({post:post, author:user});
+    } catch (err) {
+        console.error(err)
+        res.status(401).json({error: new Error('Invalid request!')})
+    }; 
 });
 
 //UPDATE
@@ -143,31 +139,28 @@ app.get('/post/:id', function(req, res, next) {
  * 
  * @apiSampleRequest http://localhost:8080/post/:id
  */
-app.put('/post/:id', function(req, res, next) {
+app.put('/post/:id', async function(req, res, next) {
     const id = req.params.id;
-    const content = req.body.content;
+    const {content} = req.body;
     //headers
     const token = req.headers.authorization;
     const decodedToken = jwt.verify(token, process.env.secret);
     const userId = decodedToken.author;
 
     try {
-        Post.findByPk(id).then(post =>{
-            post.update({
-                content: content
-            }, {}).then(response =>{
-                res.json(200);
-            }).catch(function (e) {
-                console.log(e);
-                res.json(500);
-                })
-        }).catch(function (e) {
-            console.log(e);
-            res.json(500);
-        });  
+        const post = await Post.findByPk(id);
+
+        if (!post) throw new Error('Failed to find post in database');
+
+        const response = await post.update({content: content});
+
+        if (!response) throw new Error('Failed to update post in database')
+
+        res.json(200);
+            
     } catch {
-            res.status(401).json({
-            error: new Error('Invalid request!')
+        res.status(401).json({
+        error: new Error('Invalid request!')
     })};   
 });
 
@@ -182,33 +175,23 @@ app.put('/post/:id', function(req, res, next) {
  * @apiParam {Number} id Post unique ID.
  *
  */
-app.delete('/post/:id', function(req, res, next) {
+app.delete('/post/:id', async function(req, res, next) {
     const id = req.params.id;
-     //headers
-     const token = req.headers.authorization;
-     const decodedToken = jwt.verify(token, process.env.secret);
-     const userId = decodedToken.author;
- 
-     try {
-        Post.findByPk(id).then(post =>{
-            if(post === null){
-                res.json(404);
-            }else{
-            post.destroy().then(response =>{
-                res.json(200);
-            }).catch(function (e) {
-                console.log(e);
-                res.json(500);
-                })
-            }
-         }).catch(function (e) {
-             console.log(e);
-             res.json(500);
-         });  
-     } catch {
-             res.status(401).json({
-             error: new Error('Invalid request!')
-     })};   
+    //headers
+    const token = req.headers.authorization;
+    const decodedToken = jwt.verify(token, process.env.secret);
+    const userId = decodedToken.author;
+
+    try {
+        const response = await Post.findByPk(id);
+     
+        if (!response) throw new Error('Failed to delete post in database');
+                    
+        res.json(200);
+    }catch (err) {
+        console.error(err)
+        res.status(401).json({error: new Error('Invalid request!')})
+    };
 });
 
 module.exports = router;
