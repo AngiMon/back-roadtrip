@@ -4,11 +4,7 @@ This API is written in nodejs using express.
 ## Server
 To start the server, please run :
 
-`npm start`
-
-or
-
-`node app.js`
+`npm start` or `node app.js`
 
 to stop the server (ctrl + C) or:
 `killall node`

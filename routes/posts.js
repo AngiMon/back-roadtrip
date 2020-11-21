@@ -109,21 +109,28 @@ app.get('/post/all', async function(req, res, next) {
  */
 app.get('/post/:id', async function(req, res, next) {
     const id = req.params.id;
+    //headers
+    const token = req.headers.authorization;
+    var tokenInfo = TokenService.tokenVerify(token);
 
-    try{
-        const post = await Post.findByPk(id)
-        
-        if(!post) throw new Error('Failed to find post in database');
-        
-        const user = await User.findByPk(post.author);
-        
-        if(!user) throw new Error('Failed to find post author in database');
-        
-        res.json({post:post, author:user});
-    } catch (err) {
-        console.error(err)
-        res.status(401).json({error: new Error('Invalid request!')})
-    }; 
+    if(tokenInfo.status != 200){
+        res.status(200).json(tokenInfo);
+    }else{
+        try{
+            const post = await Post.findByPk(id)
+            
+            if(!post) throw new Error('Failed to find post in database');
+            
+            const user = await User.findByPk(post.author);
+            
+            if(!user) throw new Error('Failed to find post author in database');
+            
+            res.json({post:post, author:user});
+        } catch (err) {
+            console.error(err)
+            res.status(401).json({error: new Error('Invalid request!')})
+        };
+    }
 });
 
 //UPDATE
@@ -140,27 +147,39 @@ app.get('/post/:id', async function(req, res, next) {
  */
 app.put('/post/:id', async function(req, res, next) {
     const id = req.params.id;
-    const {content} = req.body;
+    const { title, content, location, published } = req.body;
     //headers
     const token = req.headers.authorization;
-    const decodedToken = jwt.verify(token, process.env.secret);
-    const userId = decodedToken.author;
+    const tokenInfo = TokenService.tokenVerify(token);
 
-    try {
-        const post = await Post.findByPk(id);
+    if (tokenInfo.status != 200){
+        res.status(200).json(tokenInfo);
+    } else{
+        const decodedToken = jwt.verify(token, process.env.secret);
+        const author = decodedToken.userId;
 
-        if (!post) throw new Error('Failed to find post in database');
+        try {
+            const post = await Post.findByPk(id);
 
-        const response = await post.update({content: content});
+            if (!post) throw new Error('Failed to find post in database');
 
-        if (!response) throw new Error('Failed to update post in database')
+            const response = await post.update({ 
+                title: title,
+                author: author, 
+                content: content,
+                location: location,
+                published: published
+            });
 
-        res.json(200);
-            
-    } catch {
-        res.status(401).json({
-        error: new Error('Invalid request!')
-    })};   
+            if (!response) throw new Error('Failed to update post in database')
+
+            res.json(200);
+                
+        } catch {
+            res.status(500).json({
+            error: new Error('Invalid request!')
+        })};
+    }
 });
 
 //DELETE
@@ -178,19 +197,24 @@ app.delete('/post/:id', async function(req, res, next) {
     const id = req.params.id;
     //headers
     const token = req.headers.authorization;
-    const decodedToken = jwt.verify(token, process.env.secret);
-    const userId = decodedToken.author;
+    var tokenInfo = TokenService.tokenVerify(token);
 
-    try {
-        const response = await Post.findByPk(id);
-     
-        if (!response) throw new Error('Failed to delete post in database');
-                    
-        res.json(200);
-    }catch (err) {
-        console.error(err)
-        res.status(401).json({error: new Error('Invalid request!')})
-    };
+    if(tokenInfo.status != 200){
+        res.status(200).json(tokenInfo);
+    }else{
+        try {
+            const post = await Post.findByPk(id);
+
+            if (!post) throw new Error('Failed to find post in database');
+
+            await post.destroy();
+        
+            res.json(200);
+        }catch (err) {
+            console.error(err)
+            res.status(401).json({error: new Error('Invalid request!')})
+        };
+    }
 });
 
 module.exports = router;
