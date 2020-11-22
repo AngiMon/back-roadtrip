@@ -18,7 +18,7 @@ Post.init({
             allowNull: false,
         },
           content: {
-              type: Sequelize.STRING(255), 
+              type: Sequelize.TEXT('long'), 
               allowNull: false,
           },
           location: {
