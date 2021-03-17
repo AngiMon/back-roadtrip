@@ -22,9 +22,10 @@ app.use(cors());
  * @apiSampleRequest http://localhost:8080/user/add
  */
 app.post('/user/add', async function(req, res, next) {
-  const  { username, firstname, lastname, email, password, role } = req.body;
+  const  { username, firstname, lastname, email, password } = req.body;
+  let { role } = req.body;
 
-  if(typeof role == "string"){
+  if(typeof role == "string" && role.length > 0){
     role = role.replace(/\s/g,'');
     role = role.split(',');
   }

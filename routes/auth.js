@@ -7,8 +7,10 @@ const jwt = require('jsonwebtoken');
 const User = require('../models/User');
 const bcrypt = require('bcrypt');
 const TokenService = require("../services/TokenService")
+var cookieParser = require('cookie-parser');
 
 app.use(cors());
+app.use(cookieParser());
 
 
 /**
@@ -76,17 +78,16 @@ app.post('/auth/token-delivery', function(req, res, next) {
  * @apiSampleRequest http://localhost:8080/auth/account/token-delivery
  */
 app.post('/auth/account/token-delivery', function(req, res, next) {
-    const token = req.headers.authorization;
-    const decodedToken = jwt.verify(token, process.env.secret);
+    const {email, password} = req.body;
 
-    User.findOne({ where:{email: req.body.email} }).then(
+    User.findOne({ where:{email: email} }).then(
         (user) => {
             if (!user) {
                 return res.status(401).json({
                     error: new Error('User not found!')
                 });
             }
-            bcrypt.compare(req.body.password, user.password).then(
+            bcrypt.compare(password, user.password).then(
                 (valid) => {
                 if (!valid) {
                     return res.status(401).json({
@@ -104,7 +105,8 @@ app.post('/auth/account/token-delivery', function(req, res, next) {
                 { expiresIn: '1h' });
 
                 res.status(200).json({
-                    token: token
+                    token: token,
+                    user: user
                 });
             }).catch(
                 (error) => {
@@ -138,3 +140,4 @@ app.post('/token-verify', function(req, res, next){
     res.status(200).json(tokenInfo);
 })
 
+module.exports = router;

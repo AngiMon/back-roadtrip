@@ -33,7 +33,7 @@ app.post('/post/add', async function(req, res, next) {
         const tokenInfo = TokenService.tokenVerify(token);
 
         if (tokenInfo.status != 200){
-            res.status(200).json(tokenInfo);
+            res.status(200).json(tokenInfo); //status + content
         } else{
             const decodedToken = jwt.verify(token, process.env.secret);
             const author = decodedToken.userId;
@@ -52,7 +52,7 @@ app.post('/post/add', async function(req, res, next) {
         } 
     } catch (err) {
         console.error(err)
-        res.status(401).json({error: new Error('Invalid request!')})
+        res.status(401).json({error: 'Invalid request!'})
     }; 
 });
 
@@ -79,6 +79,40 @@ app.get('/post/all', async function(req, res, next) {
             if(!posts) throw new Error('Failed to retrive posts from the database');
 
             res.json(posts);
+        } catch(err){
+            console.error(err)
+            res.status(401).json({error: new Error('Invalid request!')})
+        }
+    }
+});
+
+/**
+ * @api {get} /dashboard/post/all Request Post get all as admin
+ * @apiName GetAllPostAsAdmin
+ * @apiGroup Post
+ *
+ * @apiSampleRequest http://localhost:8080/post/all
+ * @apiSuccess {Object}  post
+ */
+ app.get('/dashboard/post/all', async function(req, res, next) {
+    //headers
+    const token = req.headers.authorization;
+    var tokenInfo = TokenService.tokenVerify(token);
+
+    if(tokenInfo.status != 200){
+        res.status(200).json(tokenInfo);
+    }else{
+        const decodedToken = jwt.verify(token, process.env.secret);
+        const roleUser = decodedToken.role;
+
+        if(roleUser != "dashboard") res.status(401).json({status:401, articles:[], error: 'Forbidden, user role is not enough'})
+
+        try{
+            const posts = await Post.findAll({order:[["id", "DESC"]], include:[{ model: User }]});
+
+            if(!posts) throw new Error('Failed to retrive posts from the database');
+
+            res.status(200).json({articles:posts, status:200});
         } catch(err){
             console.error(err)
             res.status(401).json({error: new Error('Invalid request!')})
