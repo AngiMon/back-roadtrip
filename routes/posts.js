@@ -166,6 +166,57 @@ app.get('/post/:id', async function(req, res, next) {
         };
     }
 });
+/**
+ * @api {get} dashboard/post/:id Request Post get
+ * @apiName GetPostAsAdmin
+ * @apiGroup Post
+ *
+ * @apiParam {Number} id Post unique ID.
+ *
+ * @apiSuccessExample Success-Response:
+ *     HTTP/1.1 200 OK
+ *     {
+ *      "id": 1,
+ *      "content": "La vie est belle",
+ *      "location": "Paris",
+ *      "createdAt": "2020-07-26T14:33:46.304Z",
+ *      "updatedAt": "2020-07-26T14:33:46.304Z",
+ *      "author": 2
+ *     }
+ *
+ * @apiSampleRequest http://localhost:8080/post/:id
+ * @apiSuccess {Object}  post
+ */
+ app.get('/dashboard/post/:id', async function(req, res, next) {
+    const id = req.params.id;
+    //headers
+    const token = req.headers.authorization;
+    var tokenInfo = TokenService.tokenVerify(token);
+
+    const decodedToken = jwt.verify(token, process.env.secret);
+    const roleUser = decodedToken.role;
+
+    if(roleUser != "dashboard") res.status(401).json({status:401, articles:[], error: 'Forbidden, user role is not enough'})
+
+    if(tokenInfo.status != 200){
+        res.status(200).json(tokenInfo);
+    }else{
+        try{
+            const post = await Post.findByPk(id)
+            
+            if(!post) throw new Error('Failed to find post in database');
+            
+            const user = await User.findByPk(post.author);
+            
+            if(!user) throw new Error('Failed to find post author in database');
+            
+            res.status(200).json({article:post, status:200});
+        } catch (err) {
+            console.error(err)
+            res.status(401).json({error: new Error('Invalid request!')})
+        };
+    }
+});
 
 //UPDATE
 /**
@@ -207,11 +258,12 @@ app.put('/post/:id', async function(req, res, next) {
 
             if (!response) throw new Error('Failed to update post in database')
 
-            res.json(200);
+            res.status(200).json({article: post, status: 200});
                 
-        } catch {
+        } catch(e) {
             res.status(500).json({
-            error: new Error('Invalid request!')
+            errorMessage: e.message,
+            status:500
         })};
     }
 });

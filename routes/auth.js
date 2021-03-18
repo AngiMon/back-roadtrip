@@ -102,7 +102,7 @@ app.post('/auth/account/token-delivery', function(req, res, next) {
                     role: "dashboard"
                 },
                 process.env.secret,
-                { expiresIn: '1h' });
+                { expiresIn: '3h' });
 
                 res.status(200).json({
                     token: token,
