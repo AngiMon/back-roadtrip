@@ -25,7 +25,7 @@ app.use(cors());
  * @apiSampleRequest http://localhost:8080/post/add
  */
 app.post('/post/add', async function(req, res, next) {
-    const { title, content, location, published } = req.body;
+    const { title, description, content, location, published } = req.body;
 
     try {
         //headers
@@ -40,7 +40,8 @@ app.post('/post/add', async function(req, res, next) {
             
             const response = await Post.create({ 
                 title: title,
-                author: author, 
+                author: author,
+                description: description,
                 content: content,
                 location: location,
                 published: published
@@ -74,7 +75,7 @@ app.get('/post/all', async function(req, res, next) {
         res.status(200).json(tokenInfo);
     }else{
         try{
-            const posts = await Post.findAll({order:[["id", "DESC"]], include:[{ model: User }]});
+            const posts = await Post.findAll({where:{published: true}, order:[["id", "DESC"]], include:[{ model: User }]});
 
             if(!posts) throw new Error('Failed to retrive posts from the database');
 
@@ -232,7 +233,7 @@ app.get('/post/:id', async function(req, res, next) {
  */
 app.put('/post/:id', async function(req, res, next) {
     const id = req.params.id;
-    const { title, content, location, published } = req.body;
+    const { title, content, description, location, published } = req.body;
     //headers
     const token = req.headers.authorization;
     const tokenInfo = TokenService.tokenVerify(token);
@@ -252,6 +253,7 @@ app.put('/post/:id', async function(req, res, next) {
                 title: title,
                 author: author, 
                 content: content,
+                description: description,
                 location: location,
                 published: published
             });
