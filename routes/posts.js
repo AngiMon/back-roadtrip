@@ -79,7 +79,7 @@ app.get('/post/all', async function(req, res, next) {
 
             if(!posts) throw new Error('Failed to retrive posts from the database');
 
-            res.json(posts);
+            res.status(200).json({articles: posts});
         } catch(err){
             console.error(err)
             res.status(401).json({error: new Error('Invalid request!')})
@@ -152,18 +152,21 @@ app.get('/post/:id', async function(req, res, next) {
         res.status(200).json(tokenInfo);
     }else{
         try{
-            const post = await Post.findByPk(id)
+            const post = await Post.findByPk(id, {include:[{ model: User }]})
             
             if(!post) throw new Error('Failed to find post in database');
             
-            const user = await User.findByPk(post.author);
+           // const user = await User.findByPk(post.author);
             
-            if(!user) throw new Error('Failed to find post author in database');
+            //if(!user) throw new Error('Failed to find post author in database');
             
-            res.json({post:post, author:user});
-        } catch (err) {
-            console.error(err)
-            res.status(401).json({error: new Error('Invalid request!')})
+            res.json({article:post});
+        } catch (e) {
+            console.error(e)
+            res.status(500).json({
+                errorMessage: e.message,
+                status:500
+            })
         };
     }
 });
@@ -286,6 +289,11 @@ app.delete('/post/:id', async function(req, res, next) {
     //headers
     const token = req.headers.authorization;
     var tokenInfo = TokenService.tokenVerify(token);
+
+    const decodedToken = jwt.verify(token, process.env.secret);
+    const roleUser = decodedToken.role;
+
+    if(roleUser != "dashboard") res.status(401).json({status:401, articles:[], error: 'Forbidden, user role is not enough'})
 
     if(tokenInfo.status != 200){
         res.status(200).json(tokenInfo);
