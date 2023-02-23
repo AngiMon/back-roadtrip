@@ -20,7 +20,7 @@
     "morgan": "~1.9.1",
     "pg-promise": "^10.5.8",
     "react-scripts": "^4.0.0",
-    "sequelize": "^5.22.3",
+    "sequelize": "^6.28.2",
     "sequelize-auto-migrations": "github:scimonster/sequelize-auto-migrations#a063aa6535a3f580623581bf866cef2d609531ba"
   },
   "devDependencies": {
